@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import styles from "../styles/RwaVault.module.css"
 import 'bulma/css/bulma.css'
 import Web3 from 'web3'
-import vmContract from '../blockchain/urn'
+import urn from '../blockchain/urn'
+import vat from '../blockchain/vat'
 
 
 
@@ -12,6 +13,8 @@ const RwaVault = () => {
     const [vatAdress, setVatAddress] = useState('')
     const [user, setUser] = useState('Not Connected')
     const [can, setCan] = useState(0)
+    const [debt, setDebt] = useState('')
+    const [bal, setBal] = useState('')
     let web3
 
     useEffect(() => {
@@ -20,14 +23,21 @@ const RwaVault = () => {
     })
 
     const getVatAddressHandler = async () =>{
-        const vatAdress = await vmContract.methods.vat().call()
+        const vatAdress = await urn.methods.vat().call()
         setVatAddress(vatAdress)
     }
 
     const getCanHandler = async () => {
         const accounts = await web3.eth.getAccounts();
-        const can = await vmContract.methods.can(accounts[0]).call()
+        const can = await urn.methods.can(accounts[0]).call()
         setCan(can)
+    }
+
+    const getVaultBalanceHandler = async () => {
+        // const accounts = await web3.eth.getAccounts();
+        const result = await vat.methods.urns(web3.utils.asciiToHex("RWA999-A"),"0xc9f6b85b362a338BE0De500AD262f0203942e7eE").call()
+        setDebt(result[1]/1000000000000000000)
+        setBal(result[0]/1000000000000000000)
     }
 
     //window.ethereum
@@ -40,6 +50,7 @@ const RwaVault = () => {
                 const accounts = await web3.eth.getAccounts();
                 setUser(accounts[0])
                 await getCanHandler()
+                await getVaultBalanceHandler()
             } catch(err) {
                 setError(err.message)
             }
@@ -81,6 +92,12 @@ const RwaVault = () => {
             <section>
                 <div className='container'>
                     <p>Is {user} an operator?: {can}</p>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <p>total debt: {debt}</p>
+                    <p>collateral bal: {bal}</p>
                 </div>
             </section>
             <section>
