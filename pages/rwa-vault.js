@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import styles from "../styles/RwaVault.module.css"
 import 'bulma/css/bulma.css'
 import Web3 from 'web3'
-import urn from '../blockchain/urn'
+import urnContract from '../blockchain/urn'
 import vat from '../blockchain/vat'
 import jugContract from '../blockchain/jug'
 
@@ -12,30 +12,50 @@ import jugContract from '../blockchain/jug'
 const RwaVault = () => {
     const [error, setError] = useState('')
     const [vatAdress, setVatAddress] = useState('')
-    const [user, setUser] = useState('Not Connected')
+    const [user, setUser] = useState(null)
     const [can, setCan] = useState(0)
     const [debt, setDebt] = useState('')
     const [bal, setBal] = useState('')
     const [dai, setDai] = useState('')
     const [jug, setJug] = useState(null)
-    let web3
+    const [web3, setWeb3] = useState(null)
+    const [urn, setUrn] = useState(null)
+    // let web3
 
-    const wad = (Math.pow(10, 18)) //18 decimals
+    const wad = Math.pow(10, 18) //18 decimals
     const ray = (Math.pow(10, 27)) //27 decimals
     const rad = Math.pow(10, 45) //45 decimals
     const ilk = "0x5257413939392d41000000000000000000000000000000000000000000000000"
 
     useEffect(() => {
-        getVatAddressHandler()
 
-    })
+
+        if (urn) getVatAddressHandler()
+        if (urn && user) getCanHandler()
+        if (urn && user) getVaultBalanceHandler()
+
+    }, [urn, user])
+
+    const lockCollateral = async () => {
+        try {
+            urn.methods.lock("1000000000000000000").send({
+                from: user
+            })
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+
+    const drawDai = async () => {
+        //note -> remove output conduit to reduce gas. Change output conduit address to operator address :)
+    }
 
     const updateDebt = async () => {
         // const accounts = await web3.eth.getAccounts();
 
 
         // getVaultBalanceHandler()
-        
+
 
         try {
             const test = await jug.methods.drip(ilk).send({
@@ -49,14 +69,22 @@ const RwaVault = () => {
     }
 
     const getVatAddressHandler = async () => {
-        const vatAdress = await urn.methods.vat().call()
-        setVatAddress(vatAdress)
+        try {
+            const vatAdress = await urn.methods.vat().call()
+            setVatAddress(vatAdress)
+        } catch (err) {
+            setError(err.message)
+        }
     }
 
     const getCanHandler = async () => {
-        const accounts = await web3.eth.getAccounts();
-        const can = await urn.methods.can(accounts[0]).call()
-        setCan(can)
+        // const accounts = await web3.eth.getAccounts();
+        try {
+            const can = await urn.methods.can(user).call()
+            setCan(can)
+        } catch (err) {
+            setError(err.message)
+        }
     }
 
     const getVaultBalanceHandler = async () => {
@@ -78,13 +106,20 @@ const RwaVault = () => {
         if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
             try {
                 await window.ethereum.request({ method: "eth_requestAccounts" })
-                web3 = new Web3(window.ethereum)
+                const web3 = new Web3(window.ethereum)
+                setWeb3(web3)
+                const urn = urnContract(web3)
+                setUrn(urn)
                 const accounts = await web3.eth.getAccounts();
                 setUser(accounts[0])
-                await getCanHandler()
-                await getVaultBalanceHandler()
+
+
+                // getCanHandler()
+                // await getVaultBalanceHandler()
+                // getVatAddressHandler()
 
                 const jug = jugContract(web3)
+
                 setJug(jug)
             } catch (err) {
                 setError(err.message)
@@ -149,6 +184,11 @@ const RwaVault = () => {
             <section>
                 <div className='container'>
                     <button className='button is-secondary'>Repay Dai</button>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <button className='button is-secondary' onClick={lockCollateral}>Lock Collateral</button>
                 </div>
             </section>
         </div>
