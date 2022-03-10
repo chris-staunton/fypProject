@@ -1,10 +1,5 @@
-import Web3 from 'web3'
+// import Web3 from 'web3'
 
-const provider = new Web3.providers.HttpProvider(
-    "https://goerli.infura.io/v3/5785dd9062044b1880e29abf4e06bed8"
-)
-
-const web3 = new Web3(provider)
 
 const abi = [
 	{
@@ -243,6 +238,10 @@ const abi = [
 		"type": "function"
 	}
 ]
-const jug = new web3.eth.Contract(abi, "0x5408cBD474c425e4B3D69aD8a48f7F2717036072")
 
-export default jug
+const jugContract = (web3) => {
+	return new web3.eth.Contract(abi, "0x5408cBD474c425e4B3D69aD8a48f7F2717036072")
+}
+// const jug = new web3.eth.Contract(abi, "0x5408cBD474c425e4B3D69aD8a48f7F2717036072")
+
+export default jugContract
