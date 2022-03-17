@@ -7,6 +7,7 @@ import urnContract from '../blockchain/urn'
 import vat from '../blockchain/vat'
 import jugContract from '../blockchain/jug'
 import nftContract from '../blockchain/nft'
+import daiContract from '../blockchain/dai'
 // import { NextFetchEvent } from 'next/server'
 
 
@@ -25,6 +26,9 @@ const RwaVault = () => {
     const [urnAddr, setUrnAddr] = useState(null)
     const [nft, setNft] = useState(null)
     const [tokenId, setTokenID] = useState(null)
+    const [withdrawl, setWithdrawl] = useState(null)
+    const [repayment, setRepayment] = useState(null)
+    const [daiContract1, setDaiContract1] = useState(null)
     // let web3
 
     const wad = Math.pow(10, 18) //18 decimals
@@ -41,11 +45,39 @@ const RwaVault = () => {
 
     }, [urn, user])
 
+    // if (urn) {
+    //     urn.events.Lock({
+    //         filter: {}, // Using an array means OR: e.g. 20 or 23
+    //         fromBlock: 0
+    //     }, function (error, event) { console.log(event); })
+    //         .on('data', function (event) {
+    //             console.log(event); // same results as the optional callback above
+    //         })
+    //         .on('changed', function (event) {
+    //             // remove event from local database
+    //             setBal(event.returnValues[1])
+    //         })
+    //         .on('error', console.error);
+    //     urn.events.Free({
+    //         filter: {}, // Using an array means OR: e.g. 20 or 23
+    //         fromBlock: 0
+    //     }, function (error, event) { console.log(event); })
+    //         .on('data', function (event) {
+    //             console.log(event); // same results as the optional callback above
+    //         })
+    //         .on('changed', function (event) {
+    //             // remove event from local database
+    //             console.log(event.returnValues[1])
+    //             setBal(event.returnValues[1])
+    //         })
+    //         .on('error', console.error);
+    // }
+
     const lockCollateral = async () => {
         console.log(tokenId)
         console.log(urnAddr)
         try {
-            nft.methods.approve("0x4D4ACED4A58C1368Dd94791d7716584074FF2B56",9).send({
+            nft.methods.approve(urnAddr, tokenId).send({
                 from: user
             })
             await urn.methods.lock().send({
@@ -56,12 +88,61 @@ const RwaVault = () => {
         }
     }
 
-    const drawDai = async () => {
-        //note -> remove output conduit to reduce gas. Change output conduit address to operator address :)
+    const freeCollateral = async () => {
+        try {
+            urn.methods.free("1000000000000000000").send({
+                from: user
+            })
+        } catch (err) {
+            setError(err.message)
+        }
     }
 
-    const connectVault = async () =>{
-        const urn = urnContract(web3,urnAddr)
+    const drawDai = async () => {
+        //note -> remove output conduit to reduce gas. Change output conduit address to operator address :)
+        try{
+            console.log("withdrawing: ", withdrawl)
+
+            urn.methods.draw(withdrawl.toString()).send({
+                from: user
+            })
+
+        } catch(err){
+            setError(err.message)
+        }
+    }
+
+    const repayDai = async () => {
+        try{
+            console.log("repaying: ", repayment)
+
+            urn.methods.wipe(repayment.toString()).send({
+                from: user
+            })
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+
+    const wipeAll = async () => {
+        try{
+            console.log("wiping all debt")
+
+            daiContract1.methods.transfer(urnAddr,(debt*wad).toString()).send({
+                from: user
+
+            })
+
+            urn.methods.wipeAll().send({
+                from: user
+            })
+        } catch(err) {
+            setError(err.message)
+        }
+    }
+
+    const connectVault = async () => {
+        const urn = urnContract(web3, urnAddr)
         setUrn(urn)
         const tokenId = await urn.methods.tokenId().call()
         setTokenID(tokenId)
@@ -69,6 +150,7 @@ const RwaVault = () => {
         setNft(nft)
 
     }
+
 
     const updateDebt = async () => {
         // const accounts = await web3.eth.getAccounts();
@@ -109,8 +191,8 @@ const RwaVault = () => {
 
     const getVaultBalanceHandler = async () => {
         // const accounts = await web3.eth.getAccounts();
-        const result = await vat.methods.urns(ilk, "0xc9f6b85b362a338BE0De500AD262f0203942e7eE").call()
-        const dai = await vat.methods.dai("0xc9f6b85b362a338BE0De500AD262f0203942e7eE").call()
+        const result = await vat.methods.urns(ilk, urnAddr).call()
+        const dai = await vat.methods.dai(urnAddr).call()
         const rate = await vat.methods.ilks(ilk).call()
         setDai(dai / ray)
         setDebt((rate[1] * result[1]) / rad)
@@ -128,9 +210,12 @@ const RwaVault = () => {
                 await window.ethereum.request({ method: "eth_requestAccounts" })
                 const web3 = new Web3(window.ethereum)
                 setWeb3(web3)
-                
+
                 const accounts = await web3.eth.getAccounts();
                 setUser(accounts[0])
+
+                const daiContract1 = daiContract(web3)
+                setDaiContract1(daiContract1)
 
 
                 // getCanHandler()
@@ -215,6 +300,21 @@ const RwaVault = () => {
             <section>
                 <div className='container'>
                     <button className='button is-secondary' onClick={lockCollateral}>Lock Collateral</button>
+                    <button className='button is-secondary' onClick={freeCollateral}>Free Collateral</button>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <input type='text' onChange={(e) => setWithdrawl(e.target.value*wad)}></input>
+                    <button className='button is-secondary' onClick={drawDai}>Draw DAI</button>
+                    <input type='text' onChange={(e) => setRepayment(e.target.value*wad)}></input>
+                    <button className='button is-secondary' onClick={repayDai}>Repay DAI</button>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <button className='button is-primary' onClick={wipeAll}>Wipe all debt</button>
+                    {/* <button className='button is-secondary' onClick={freeCollateral}>Free Collateral</button> */}
                 </div>
             </section>
         </div>
