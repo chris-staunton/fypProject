@@ -633,8 +633,8 @@ const abi = [
 		"type": "function"
 	}
 ]
-const oracleContract = (web3,address) =>{
-    return new web3.eth.Contract(abi, address)
+const oracleContract = (web3) =>{
+    return new web3.eth.Contract(abi, "0x166D6C931dbF8783D25D7a609916965F283c03d6")
 } 
 
 export default oracleContract
