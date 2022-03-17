@@ -6,6 +6,8 @@ import Web3 from 'web3'
 import urnContract from '../blockchain/urn'
 import vat from '../blockchain/vat'
 import jugContract from '../blockchain/jug'
+import nftContract from '../blockchain/nft'
+// import { NextFetchEvent } from 'next/server'
 
 
 
@@ -20,12 +22,15 @@ const RwaVault = () => {
     const [jug, setJug] = useState(null)
     const [web3, setWeb3] = useState(null)
     const [urn, setUrn] = useState(null)
+    const [urnAddr, setUrnAddr] = useState(null)
+    const [nft, setNft] = useState(null)
+    const [tokenId, setTokenID] = useState(null)
     // let web3
 
     const wad = Math.pow(10, 18) //18 decimals
     const ray = (Math.pow(10, 27)) //27 decimals
     const rad = Math.pow(10, 45) //45 decimals
-    const ilk = "0x5257413939392d41000000000000000000000000000000000000000000000000"
+    const ilk = "0x5257413130320000000000000000000000000000000000000000000000000000" //RWA102
 
     useEffect(() => {
 
@@ -37,8 +42,13 @@ const RwaVault = () => {
     }, [urn, user])
 
     const lockCollateral = async () => {
+        console.log(tokenId)
+        console.log(urnAddr)
         try {
-            urn.methods.lock("1000000000000000000").send({
+            nft.methods.approve("0x4D4ACED4A58C1368Dd94791d7716584074FF2B56",9).send({
+                from: user
+            })
+            await urn.methods.lock().send({
                 from: user
             })
         } catch (err) {
@@ -48,6 +58,16 @@ const RwaVault = () => {
 
     const drawDai = async () => {
         //note -> remove output conduit to reduce gas. Change output conduit address to operator address :)
+    }
+
+    const connectVault = async () =>{
+        const urn = urnContract(web3,urnAddr)
+        setUrn(urn)
+        const tokenId = await urn.methods.tokenId().call()
+        setTokenID(tokenId)
+        const nft = nftContract(web3)
+        setNft(nft)
+
     }
 
     const updateDebt = async () => {
@@ -108,8 +128,7 @@ const RwaVault = () => {
                 await window.ethereum.request({ method: "eth_requestAccounts" })
                 const web3 = new Web3(window.ethereum)
                 setWeb3(web3)
-                const urn = urnContract(web3)
-                setUrn(urn)
+                
                 const accounts = await web3.eth.getAccounts();
                 setUser(accounts[0])
 
@@ -157,6 +176,13 @@ const RwaVault = () => {
             <section>
                 <div className='container'>
                     <p>placeholder text: {vatAdress}</p>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <input type='text' onChange={(e) => setUrnAddr(e.target.value)}></input>
+                    <button onClick={connectVault}>Connect Vault</button>
+                    <p>Vault Address: {urnAddr}</p>
                 </div>
             </section>
             <section>
