@@ -1,11 +1,3 @@
-import Web3 from 'web3'
-
-const provider = new Web3.providers.HttpProvider(
-    "https://goerli.infura.io/v3/5785dd9062044b1880e29abf4e06bed8"
-)
-
-const web3 = new Web3(provider)
-
 const abi = [
 	{
 		"inputs": [
@@ -461,6 +453,9 @@ const abi = [
 		"type": "function"
 	}
 ]
-const liquidator = new web3.eth.Contract(abi, "0xdf02C7ED36A79487875217Eb43Aa0fC8AbD0F263")
 
-export default liquidator
+const auctionContract = (web3,address) =>{
+    return new web3.eth.Contract(abi, address)
+} 
+
+export default auctionContract
