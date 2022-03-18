@@ -29,6 +29,8 @@ const RwaVault = () => {
     const [withdrawl, setWithdrawl] = useState(null)
     const [repayment, setRepayment] = useState(null)
     const [daiContract1, setDaiContract1] = useState(null)
+    const [ilkStr, setIlkStr] = useState(null)
+    const [nftUri, setNftUri] = useState(null)
     // let web3
 
     const wad = Math.pow(10, 18) //18 decimals
@@ -174,6 +176,8 @@ const RwaVault = () => {
         try {
             const vatAdress = await urn.methods.vat().call()
             setVatAddress(vatAdress)
+            const ilkStr = await urn.methods.ilk().call()
+            setIlkStr(web3.utils.hexToString(ilkStr))
         } catch (err) {
             setError(err.message)
         }
@@ -197,6 +201,12 @@ const RwaVault = () => {
         setDai(dai / ray)
         setDebt((rate[1] * result[1]) / rad)
         setBal(result[0] / wad)
+    }
+
+    const getNftData = async () => {
+        // const 
+        const nftUri = await nft.methods.tokenUri(tokenId).call()
+        setNftUri(nftUri)
     }
 
     // "0x0000000000000000000000000000000000000000000000000000000000000001"
@@ -278,8 +288,8 @@ const RwaVault = () => {
             <section>
                 <div className='container'>
                     <p>total debt: {debt}</p>
-                    <p>collateral bal: {bal}</p>
-                    <p>total dai drawn: {dai}</p>
+                    <p>{ilkStr} collateral bal: {bal}</p>
+                    {/* <p>total dai drawn: {dai}</p> */}
                 </div>
             </section>
             <section>
@@ -315,6 +325,14 @@ const RwaVault = () => {
                 <div className='container'>
                     <button className='button is-primary' onClick={wipeAll}>Wipe all debt</button>
                     {/* <button className='button is-secondary' onClick={freeCollateral}>Free Collateral</button> */}
+                </div>
+            </section>
+
+            <section>
+                <div className='container'>
+                    <h1>{ilkStr} NFT data:</h1>
+                    <h2></h2>
+                    <a href='https://ipfs.io/ipfs/QmddMpiPGUkDjFnqbY8ZVVrVG1DePq8H6LDbgQiWgcUmsb'>Here is the uri</a>
                 </div>
             </section>
         </div>
