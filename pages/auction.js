@@ -9,6 +9,7 @@ import jugContract from '../blockchain/jug'
 import nftContract from '../blockchain/nft'
 import daiContract from '../blockchain/dai'
 import oracleContract from '../blockchain/oracle'
+import auctionContract from '../blockchain/auction'
 
 // import { NextFetchEvent } from 'next/server'
 
@@ -36,6 +37,7 @@ const RwaAuction = () => {
     const [value, setValue] = useState(null)
     const [adjustedValue, setAdjustedVal] = useState(null)
     const [health, setHealth] = useState(null)
+    const [auction, setAuction] = useState(null)
     const [auctionInfo, setAuctionInfo] = useState( [
         {
             id: 1,
@@ -67,9 +69,9 @@ const RwaAuction = () => {
         if (urn && user) getCanHandler()
         if (urn && user) getVaultBalanceHandler()
         // if (oracle) getIlkValues()
-        if (user) getAuctions()
+        if (auction) getAuctions()
 
-    }, [urn, user, oracle])
+    }, [urn, user, oracle, auction])
 
     // if (urn) {
     //     urn.events.Lock({
@@ -122,21 +124,22 @@ const RwaAuction = () => {
 
     const getAuctions = async () => {
 
-        let tmp = [
-            {
-                id: 1,
-                bid: 0,
-                tab: 17,
-                guy: "me"
-            },
-            {
-                id: 2,
-                bid: 5,
-                tab: 68,
-                guy: "yer da"
-            }
-        ]
+        let tmp = []
     
+        
+
+        const len = await auction.methods.kicks().call()
+        console.log(len)
+
+        for(let i=1; i<=len; i++){
+            let kick = await auction.methods.bids(i).call()
+            if(kick.tic>0){
+                tmp.push(kick)
+            }
+            
+            console.log(kick)
+        }
+
         setAuctionInfo(tmp)
 
     }
@@ -181,6 +184,12 @@ const RwaAuction = () => {
         }
     }
 
+    const getDate = (unix) => {
+
+        return new Date(unix*1000).toUTCString()
+
+    }
+
 
 
     const getVaultBalanceHandler = async () => {
@@ -215,6 +224,9 @@ const RwaAuction = () => {
                 setOracle(oracle)
 
                 console.log(oracle)
+
+                const auction = auctionContract(web3,"0xdf02C7ED36A79487875217Eb43Aa0fC8AbD0F263")
+                setAuction(auction)
 
                 // getIlkValues()
 
@@ -307,8 +319,9 @@ const RwaAuction = () => {
                 <div className='container'>
                     <h1>Auctions:</h1>
                     <ul>
-                        {auctionInfo.map(e=>(<ul key={e.id}>
-                            <li>id: {e.id}</li>
+                        {auctionInfo.map((e,i)=>(<ul key={e.tic}>
+                            <li>id: {i+1}</li>
+                            <li>bid expiry time: {getDate(e.tic)}</li>
                             <li>last bid: {e.bid}</li>
                             <li>goal debt coverage: {e.tab}</li>
                             <li>highest bidder: {e.guy}</li>
