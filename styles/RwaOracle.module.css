@@ -1,0 +1,13 @@
+.main h1{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.healthy {
+    background-color: rgba(0, 128, 0, 0.589);
+}
+
+.unhealthy {
+    background-color: rgba(255, 0, 0, 0.589);
+}
