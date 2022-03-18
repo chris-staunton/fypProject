@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
-import styles from "../styles/RwaVault.module.css"
+import styles from "../styles/RwaOracle.module.css"
 import 'bulma/css/bulma.css'
 import Web3 from 'web3'
 import urnContract from '../blockchain/urn'
@@ -35,6 +35,7 @@ const RwaOracle = () => {
     const [newValue, setNewValue] = useState(null)
     const [value, setValue] = useState(null)
     const [adjustedValue, setAdjustedVal] = useState(null)
+    const [health, setHealth] = useState(null)
     // let web3
 
     const wad = Math.pow(10, 18) //18 decimals
@@ -45,6 +46,7 @@ const RwaOracle = () => {
     useEffect(() => {
 
         if (oracle) getIlkValues()
+        if (oracle) getHealth()
 
 
         if (urn) getVatAddressHandler()
@@ -103,6 +105,14 @@ const RwaOracle = () => {
 
     }
 
+    const getHealth = async () =>{
+        const health = await oracle.methods.good(ilk).call()
+        setHealth(health)
+        console.log(health)
+
+
+    }
+
     const changeValue = async () => {
         console.log("changing to this: ", newValue)
         const tmp = oracle.methods.ilks(ilk).call()[5]
@@ -113,6 +123,10 @@ const RwaOracle = () => {
             oracle.methods.dip(ilk, newValue.toString()).send({
                 from: user
             })
+
+            getHealth()
+
+           
 
         } catch (err) {
             setError(err.message)
@@ -234,6 +248,16 @@ const RwaOracle = () => {
             <section>
                 <div className='container'>
                     <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
+                </div>
+            </section>
+            <section>
+                <div className='container'>
+                    <div className={health ? styles.healthy : styles.unhealthy}>
+                        {/* <p>afsnjkdnfksnj</p> */}
+                        <p>is urn safe: {health ? "yes" : "no"}</p>
+
+                    </div>
+                    {/* <p>is urn safe: {health}</p> */}
                 </div>
             </section>
 
