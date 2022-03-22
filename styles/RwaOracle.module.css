@@ -11,3 +11,9 @@
 .unhealthy {
     background-color: rgba(255, 0, 0, 0.589);
 }
+
+.urnHealth {
+    width: 200px;
+    height: 100px;
+    background-color: red;
+}
