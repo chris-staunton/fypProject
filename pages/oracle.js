@@ -24,7 +24,7 @@ const RwaOracle = () => {
     const [dai, setDai] = useState('')
     const [jug, setJug] = useState(null)
     const [web3, setWeb3] = useState(null)
-    const [urn, setUrn] = useState(null)
+    const [urn, setUrn] = useState(false)
     const [urnAddr, setUrnAddr] = useState(null)
     const [nft, setNft] = useState(null)
     const [tokenId, setTokenID] = useState(null)
@@ -162,6 +162,27 @@ const RwaOracle = () => {
         }
     }
 
+    const startAuction = async () => {
+
+        if (health) {
+            alert("Vault is healthy!")
+        }
+        else if (health == null) {
+            alert("Not connected to Vault yet!")
+
+        }
+        else {
+            try {
+                await oracle.methods.liquidate(ilk, urnAddr).send({
+                    from: user
+                })
+
+            } catch (err) {
+                setError(err.message)
+            }
+        }
+    }
+
 
 
     const getVaultBalanceHandler = async () => {
@@ -228,7 +249,7 @@ const RwaOracle = () => {
             <nav className='navbar mt-4 mb-4'>
                 <div className='container'>
                     <div className='navbar-brand'>
-                        <h1>Real World Asset Vault</h1>
+                        <h1>Real World Asset Oracle</h1>
 
                     </div>
                     <div className='navbar-item'>
@@ -240,9 +261,44 @@ const RwaOracle = () => {
                     </div>
                 </div>
             </nav>
+
             <section>
                 <div className='container'>
+                    <div className='label'>Enter Vault Address:</div>
+                    <input type='text' onChange={(e) => setUrnAddr(e.target.value)}></input>
+                </div>
+            </section>
+            {/* <section>
+                <div className='container'>
                     <p>Oracle Address: 0x166D6C931dbF8783D25D7a609916965F283c03d6</p>
+                </div>
+            </section> */}
+
+            <section>
+                <div className='container mt-6 mb-6'>
+                    <div className='label'>RWA102 Valuation:</div>
+                    <div className='columns'>
+                        <div className='box column'>
+                            <div className='columns mb-4'>
+                                <div className='column'>
+                                    <p>Current Value: ${value}</p>
+                                </div>
+                                <div className='column'>
+                                    <p>Adjusted Value: ${adjustedValue}</p>
+                                </div>
+                            </div>
+                            <div >
+                                <section>
+                                    <div className='label'>Adjust Valuation:</div>
+                                    <div className='container'>
+                                        <input type='text' onChange={(e) => setNewValue(e.target.value * wad)}></input>
+                                        <button className='button is-secondary is-small' onClick={changeValue}>Change Value</button>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                        <div className='column'></div>
+                    </div>
                 </div>
             </section>
 
@@ -252,19 +308,14 @@ const RwaOracle = () => {
                     <p>{error}</p>
                 </div>
             </section>
-            <section>
+            {/* <section>
                 <div className='container'>
                     <p>Current Value: {value}</p>
                     <p>Adjusted Value: {adjustedValue}</p>
                 </div>
-            </section>
-            <section>
-                <div className='container'>
-                    <input type='text' onChange={(e) => setNewValue(e.target.value * wad)}></input>
-                    <button className='button is-secondary' onClick={changeValue}>Change Value</button>
-                </div>
-            </section>
-            <section>
+            </section> */}
+
+            {/* <section>
                 <div className='container'>
                     <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
                 </div>
@@ -272,19 +323,47 @@ const RwaOracle = () => {
             <section>
                 <div className='container'>
                     <div className={health ? styles.healthy : styles.unhealthy}>
-                        {/* <p>afsnjkdnfksnj</p> */}
+                        {/* <p>afsnjkdnfksnj</p> 
                         <p>is urn safe: {health ? "yes" : "no"}</p>
 
                     </div>
-                    {/* <p>is urn safe: {health}</p> */}
+                    {/* <p>is urn safe: {health}</p> 
+                </div>
+            </section> */}
+            <hr></hr>
+            <section>
+
+                <div className='container mt-4'>
+                    <h1 className='mb-4'>Keeper dashboard</h1>
+                    <div className='columns'>
+                        <div className='column'>
+                            <button className={'button is-secondary px-6 pt-6 pb-6 mr-6'} onClick={getHealth}>Check Vault Health</button>
+                        </div>
+                        <div className='column'>
+                        <div className='box'>
+                            <div className={health?'box has-background-success-light':'box has-background-danger-light'} >
+                                
+                                    <p>RWA102 {health ? 'Vault is healthy :)' : 'Vault is unhealthy!'}</p>
+                                    </div>
+
+
+                            </div>
+
+                        </div>
+                        <div className='column'></div>
+                        <div className='column'></div>
+        
+                    </div>
+                    <button className='button is-secondary px-6 pt-6 pb-6 mr-6' onClick={updateDebt}>Refresh Debt</button>
+                    <button className='button is-secondary px-6 pt-6 pb-6' onClick={startAuction}>Start Auction</button>
                 </div>
             </section>
-            <section>
+            {/* <section>
                 <div className='container mt-6'>
 
-                    <button className='button is-secondary px-6 pt-6 pb-6' onClick={updateDebt}>Refresh Debt</button>
+                    <button className='button is-secondary px-6 pt-6 pb-6' onClick={startAuction}>Start Auction</button>
                 </div>
-            </section>
+            </section> */}
 
 
 
