@@ -45,13 +45,15 @@ const RwaAuction = () => {
             id: 1,
             bid: 0,
             tab: 17,
-            guy: "me"
+            guy: "me",
+            tic: 1650000000
         },
         {
             id: 2,
             bid: 5,
             tab: 68,
-            guy: "yer da"
+            guy: "yer da",
+            tic: 235266342
         }
     ])
     // let web3
@@ -63,25 +65,48 @@ const RwaAuction = () => {
 
     useEffect(() => {
 
-        if (oracle) getIlkValues()
-        if (oracle) getHealth()
+        // if (oracle) getIlkValues()
+        // if (oracle) getHealth()
 
-        if (nft) getNftData()
+        // if (nft) getNftData()
 
 
-        if (urn) getVatAddressHandler()
-        if (urn && user) getCanHandler()
-        if (urn && user) getVaultBalanceHandler()
+        // if (urn) getVatAddressHandler()
+        // if (urn && user) getCanHandler()
+        // if (urn && user) getVaultBalanceHandler()
         // if (oracle) getIlkValues()
         if (auction) getAuctions()
 
-    }, [urn, user, oracle, auction, nft])
+    }, [auction])
 
-    const sendBid = async () =>{
+    const sendBid = async (id) => {
+
+        if(bid<=auctionInfo[1].bid*1.05){
+            alert("Bids must increase by at least 5%")
+
+        }
+        else{
+        try{
+            await auction.methods.tend(id,wad.toString(),bid.toString()).send({
+                from: user
+            })
+
+        }catch(err){
+            setError(err.message)
+        }
+    }
 
     }
 
-    const dealAuction = async () =>{
+    const dealAuction = async (id) => {
+        try{
+            await auction.methods.deal(id).send({
+                from: user
+            })
+
+        }catch(err){
+            setError(err.message)
+        }
 
     }
 
@@ -145,9 +170,9 @@ const RwaAuction = () => {
 
         for (let i = 1; i <= len; i++) {
             let kick = await auction.methods.bids(i).call()
-            if (kick.tic > 0) {
-                tmp.push(kick)
-            }
+            // if (kick.tic > 0) {
+            tmp.push(kick)
+            // }
 
             console.log(kick)
         }
@@ -354,30 +379,39 @@ const RwaAuction = () => {
                     <h1>Auctions:</h1>
                     <ul>
                         {auctionInfo.map((e, i) => (
-                            <div key={e.tic} className='columns'>
-                                <div className='column box'>
-                                    <ul >
-                                        <li><b>ID:</b> {i + 1}</li>
-                                        <li><b>Current bid expiry time:</b> {getDate(e.tic)}</li>
-                                        <li><b>Last bid amount:</b> {e.bid/wad} DAI</li>
-                                        <li><b>Goal debt coverage:</b> {e.tab} DAI</li>
-                                        <li><b>Highest bidder:</b> {e.guy}</li>
-                                        <li><b>Auction Expiry:</b> {getDate(e.end)}</li>
-                                        <br></br>
-                                    </ul>
-                                </div>
-                                <div className='column mt-6'>
-                                    <input type='text' onChange={(e) => setBid(e.target.value * wad)}></input>
-                                    <button className='button is-primary mb-4' onClick={sendBid}>Bid</button>
-                                    <button className='button is-warning' onClick={dealAuction}>Deal Auction</button>
-                                    <br></br>
-                                    <a href='https://ipfs.io/ipfs/QmddMpiPGUkDjFnqbY8ZVVrVG1DePq8H6LDbgQiWgcUmsb'>
-                                    <button className='button is-secondary'>View Asset</button>
-                                    </a>
-                                </div>
-                                <div className='column'></div>
-                                <div className='column'></div>
-                                
+                            <div key={e.tic} >
+                                {e.tic > 0 ?
+                                    <div className='columns'>
+                                        <div className='column box'>
+
+                                            <ul >
+                                                <li><b>ID:</b> {i + 1}</li>
+                                                <li><b>Current bid expiry time:</b> {getDate(e.tic)}</li>
+                                                <li><b>Last bid amount:</b> {e.bid / wad} DAI</li>
+                                                <li><b>Goal debt coverage:</b> {e.tab} DAI</li>
+                                                <li><b>Highest bidder:</b> {e.guy}</li>
+                                                <li><b>Auction Expiry:</b> {getDate(e.end)}</li>
+                                                <br></br>
+                                            </ul>
+
+
+                                        </div>
+                                        <div className='column mt-6'>
+                                            <div className='label'>Enter Bid Amount (DAI):</div>
+                                            <input type='text' onChange={(e) => setBid(e.target.value * wad)}></input>
+                                            <button className='button is-primary mb-4' onClick={() => sendBid(i + 1)}>Bid</button>
+                                            <br></br>
+                                            <button className='button is-warning' onClick={() => dealAuction(i + 1)}>Deal Auction</button>
+                                            <br></br>
+                                            <a href='https://ipfs.io/ipfs/QmddMpiPGUkDjFnqbY8ZVVrVG1DePq8H6LDbgQiWgcUmsb'>
+                                                <button className='button is-secondary'>View Asset</button>
+                                            </a>
+                                        </div>
+                                        <div className='column'></div>
+                                        <div className='column'></div>
+                                    </div>
+                                    :
+                                    null}
                             </div>
                         ))}
                         <a>{nftUri}</a>
