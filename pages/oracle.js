@@ -84,6 +84,25 @@ const RwaOracle = () => {
     //         .on('error', console.error);
     // }
 
+
+    const updateDebt = async () => {
+        // const accounts = await web3.eth.getAccounts();
+
+
+        // getVaultBalanceHandler()
+
+
+        try {
+            const test = await jug.methods.drip(ilk).send({
+                from: user
+            })
+
+        } catch (err) {
+            setError(err.message)
+        }
+
+    }
+
     const getIlkValues = async () => {
 
         // console.log(oracle)
@@ -105,7 +124,7 @@ const RwaOracle = () => {
 
     }
 
-    const getHealth = async () =>{
+    const getHealth = async () => {
         const health = await oracle.methods.good(ilk).call()
         setHealth(health)
         console.log(health)
@@ -126,7 +145,7 @@ const RwaOracle = () => {
 
             getHealth()
 
-           
+
 
         } catch (err) {
             setError(err.message)
@@ -202,14 +221,14 @@ const RwaOracle = () => {
     return (
         <div className={styles.main}>
             <Head>
-                <title>Real World Asset Vault</title>
-                <meta name="description" content="Access to your Maker Vault" />
+                <title>Real World Asset Oracle</title>
+                <meta name="description" content="Oracle for your Real World Asset" />
             </Head>
 
             <nav className='navbar mt-4 mb-4'>
                 <div className='container'>
                     <div className='navbar-brand'>
-                        <h1>RWA Vault</h1>
+                        <h1>Real World Asset Vault</h1>
 
                     </div>
                     <div className='navbar-item'>
@@ -258,6 +277,12 @@ const RwaOracle = () => {
 
                     </div>
                     {/* <p>is urn safe: {health}</p> */}
+                </div>
+            </section>
+            <section>
+                <div className='container mt-6'>
+
+                    <button className='button is-secondary px-6 pt-6 pb-6' onClick={updateDebt}>Refresh Debt</button>
                 </div>
             </section>
 
