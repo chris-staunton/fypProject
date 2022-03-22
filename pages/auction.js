@@ -38,7 +38,8 @@ const RwaAuction = () => {
     const [adjustedValue, setAdjustedVal] = useState(null)
     const [health, setHealth] = useState(null)
     const [auction, setAuction] = useState(null)
-    const [auctionInfo, setAuctionInfo] = useState( [
+    const [nftUri, setNftUri] = useState(null)
+    const [auctionInfo, setAuctionInfo] = useState([
         {
             id: 1,
             bid: 0,
@@ -64,6 +65,8 @@ const RwaAuction = () => {
         if (oracle) getIlkValues()
         if (oracle) getHealth()
 
+        if (nft) getNftData()
+
 
         if (urn) getVatAddressHandler()
         if (urn && user) getCanHandler()
@@ -71,7 +74,7 @@ const RwaAuction = () => {
         // if (oracle) getIlkValues()
         if (auction) getAuctions()
 
-    }, [urn, user, oracle, auction])
+    }, [urn, user, oracle, auction, nft])
 
     // if (urn) {
     //     urn.events.Lock({
@@ -125,28 +128,32 @@ const RwaAuction = () => {
     const getAuctions = async () => {
 
         let tmp = []
-    
-        
+
+
 
         const len = await auction.methods.kicks().call()
         console.log(len)
 
-        for(let i=1; i<=len; i++){
+        for (let i = 1; i <= len; i++) {
             let kick = await auction.methods.bids(i).call()
-            if(kick.tic>0){
+            if (kick.tic > 0) {
                 tmp.push(kick)
             }
-            
+
             console.log(kick)
         }
 
         setAuctionInfo(tmp)
 
+
+
+        // getNftData()
+
     }
 
-    
 
-    const getHealth = async () =>{
+
+    const getHealth = async () => {
         const health = await oracle.methods.good(ilk).call()
         setHealth(health)
         console.log(health)
@@ -167,7 +174,7 @@ const RwaAuction = () => {
 
             getHealth()
 
-           
+
 
         } catch (err) {
             setError(err.message)
@@ -186,8 +193,15 @@ const RwaAuction = () => {
 
     const getDate = (unix) => {
 
-        return new Date(unix*1000).toUTCString()
+        return new Date(unix * 1000).toUTCString()
 
+    }
+
+    const getNftData = async () => {
+        // const 
+        let tokenId = 9;
+        const nftUri = await nft.methods.tokenURI(tokenId).call()
+        setNftUri(nftUri)
     }
 
 
@@ -225,8 +239,11 @@ const RwaAuction = () => {
 
                 console.log(oracle)
 
-                const auction = auctionContract(web3,"0xdf02C7ED36A79487875217Eb43Aa0fC8AbD0F263")
+                const auction = auctionContract(web3, "0xdf02C7ED36A79487875217Eb43Aa0fC8AbD0F263")
                 setAuction(auction)
+
+                const nft = nftContract(web3)
+                setNft(nft)
 
                 // getIlkValues()
 
@@ -283,7 +300,7 @@ const RwaAuction = () => {
                     <p>{error}</p>
                 </div>
             </section>
-            <section>
+            {/* <section>
                 <div className='container'>
                     <p>Current Value: {value}</p>
                     <p>Adjusted Value: {adjustedValue}</p>
@@ -299,7 +316,7 @@ const RwaAuction = () => {
                 <div className='container'>
                     <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
                 </div>
-            </section>
+            </section> */}
             <section>
                 <div className='container'>
                     <div className={health ? styles.healthy : styles.unhealthy}>
@@ -319,14 +336,15 @@ const RwaAuction = () => {
                 <div className='container'>
                     <h1>Auctions:</h1>
                     <ul>
-                        {auctionInfo.map((e,i)=>(<ul key={e.tic}>
-                            <li>id: {i+1}</li>
+                        {auctionInfo.map((e, i) => (<ul key={e.tic}>
+                            <li>id: {i + 1}</li>
                             <li>bid expiry time: {getDate(e.tic)}</li>
                             <li>last bid: {e.bid}</li>
                             <li>goal debt coverage: {e.tab}</li>
                             <li>highest bidder: {e.guy}</li>
                             <br></br></ul>))}
-                       
+                        <a>{nftUri}</a>
+
                     </ul>
                 </div>
             </section>
