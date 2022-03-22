@@ -39,6 +39,7 @@ const RwaAuction = () => {
     const [health, setHealth] = useState(null)
     const [auction, setAuction] = useState(null)
     const [nftUri, setNftUri] = useState(null)
+    const [bid, setBid] = useState(null)
     const [auctionInfo, setAuctionInfo] = useState([
         {
             id: 1,
@@ -75,6 +76,14 @@ const RwaAuction = () => {
         if (auction) getAuctions()
 
     }, [urn, user, oracle, auction, nft])
+
+    const sendBid = async () =>{
+
+    }
+
+    const dealAuction = async () =>{
+
+    }
 
     // if (urn) {
     //     urn.events.Lock({
@@ -276,7 +285,7 @@ const RwaAuction = () => {
             <nav className='navbar mt-4 mb-4'>
                 <div className='container'>
                     <div className='navbar-brand'>
-                        <h1>RWA Auctions</h1>
+                        <h1>Real World Asset Auctions</h1>
 
                     </div>
                     <div className='navbar-item'>
@@ -288,11 +297,11 @@ const RwaAuction = () => {
                     </div>
                 </div>
             </nav>
-            <section>
+            {/* <section>
                 <div className='container'>
                     <p>Oracle Address: 0x166D6C931dbF8783D25D7a609916965F283c03d6</p>
                 </div>
-            </section>
+            </section> */}
 
 
             <section>
@@ -317,32 +326,60 @@ const RwaAuction = () => {
                     <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
                 </div>
             </section> */}
-            <section>
+            {/* <section>
                 <div className='container'>
-                    <div className={health ? styles.healthy : styles.unhealthy}>
-                        {/* <p>afsnjkdnfksnj</p> */}
-                        <p>is urn safe: {health ? "yes" : "no"}</p>
+                    <div className={health ? styles.healthy : styles.unhealthy}> */}
+            {/* <p>afsnjkdnfksnj</p> */}
+            {/* <p>is urn safe: {health ? "yes" : "no"}</p>
 
-                    </div>
-                    {/* <p>is urn safe: {health}</p> */}
-                </div>
+                    </div> */}
+            {/* <p>is urn safe: {health}</p> */}
+            {/* </div>
             </section>
             <section>
                 <div className='container'>
                     <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
+                </div>
+            </section> */}
+            <section>
+                <div className='container mb-6'>
+                    <h2 className='bold'>Welcome to the Real World Asset Auction House!</h2>
+                    <p>Here you will find various Real World Asset NFTs which have been liquidated from a MakerDAO Vault.</p>
+                    <p>Bid on any of the active auctions below with your DAI!</p>
+
                 </div>
             </section>
             <section>
                 <div className='container'>
                     <h1>Auctions:</h1>
                     <ul>
-                        {auctionInfo.map((e, i) => (<ul key={e.tic}>
-                            <li>id: {i + 1}</li>
-                            <li>bid expiry time: {getDate(e.tic)}</li>
-                            <li>last bid: {e.bid}</li>
-                            <li>goal debt coverage: {e.tab}</li>
-                            <li>highest bidder: {e.guy}</li>
-                            <br></br></ul>))}
+                        {auctionInfo.map((e, i) => (
+                            <div key={e.tic} className='columns'>
+                                <div className='column box'>
+                                    <ul >
+                                        <li><b>ID:</b> {i + 1}</li>
+                                        <li><b>Current bid expiry time:</b> {getDate(e.tic)}</li>
+                                        <li><b>Last bid amount:</b> {e.bid/wad} DAI</li>
+                                        <li><b>Goal debt coverage:</b> {e.tab} DAI</li>
+                                        <li><b>Highest bidder:</b> {e.guy}</li>
+                                        <li><b>Auction Expiry:</b> {getDate(e.end)}</li>
+                                        <br></br>
+                                    </ul>
+                                </div>
+                                <div className='column mt-6'>
+                                    <input type='text' onChange={(e) => setBid(e.target.value * wad)}></input>
+                                    <button className='button is-primary mb-4' onClick={sendBid}>Bid</button>
+                                    <button className='button is-warning' onClick={dealAuction}>Deal Auction</button>
+                                    <br></br>
+                                    <a href='https://ipfs.io/ipfs/QmddMpiPGUkDjFnqbY8ZVVrVG1DePq8H6LDbgQiWgcUmsb'>
+                                    <button className='button is-secondary'>View Asset</button>
+                                    </a>
+                                </div>
+                                <div className='column'></div>
+                                <div className='column'></div>
+                                
+                            </div>
+                        ))}
                         <a>{nftUri}</a>
 
                     </ul>
