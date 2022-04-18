@@ -634,7 +634,7 @@ const abi = [
 	}
 ]
 const oracleContract = (web3) =>{
-    return new web3.eth.Contract(abi, "0x166D6C931dbF8783D25D7a609916965F283c03d6")
+    return new web3.eth.Contract(abi, "0xcc64E075d3410a933619292d1a51375EBF79f60C")
 } 
 
 export default oracleContract

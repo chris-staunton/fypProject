@@ -503,7 +503,7 @@ const abi = [
 	}
 ]
 const nftContract = (web3) =>{
-    return new web3.eth.Contract(abi, "0x266d1456f5D6bf4E7d5B77C3720EBEcc3E731692")
+    return new web3.eth.Contract(abi, "0xa6e81B4dC9Df6c703852C942bbA50A829dA3AcA4")
 } 
 
 export default nftContract

@@ -11,32 +11,22 @@ import daiContract from '../blockchain/dai'
 import oracleContract from '../blockchain/oracle'
 import auctionContract from '../blockchain/auction'
 
-// import { NextFetchEvent } from 'next/server'
 
 
 
 const RwaAuction = () => {
     const [error, setError] = useState('')
-    const [vatAdress, setVatAddress] = useState('')
     const [user, setUser] = useState(null)
-    const [can, setCan] = useState(0)
-    const [debt, setDebt] = useState('')
-    const [bal, setBal] = useState('')
-    const [dai, setDai] = useState('')
-    const [jug, setJug] = useState(null)
+   
     const [web3, setWeb3] = useState(null)
     const [urn, setUrn] = useState(null)
     const [urnAddr, setUrnAddr] = useState(null)
     const [nft, setNft] = useState(null)
-    const [tokenId, setTokenID] = useState(null)
-    const [withdrawl, setWithdrawl] = useState(null)
-    const [repayment, setRepayment] = useState(null)
+
     const [daiContract1, setDaiContract1] = useState(null)
     const [oracle, setOracle] = useState(null)
     const [newValue, setNewValue] = useState(null)
-    const [value, setValue] = useState(null)
-    const [adjustedValue, setAdjustedVal] = useState(null)
-    const [health, setHealth] = useState(null)
+
     const [auction, setAuction] = useState(null)
     const [nftUri, setNftUri] = useState(null)
     const [bid, setBid] = useState(null)
@@ -61,88 +51,52 @@ const RwaAuction = () => {
     const wad = Math.pow(10, 18) //18 decimals
     const ray = (Math.pow(10, 27)) //27 decimals
     const rad = Math.pow(10, 45) //45 decimals
-    const ilk = "0x5257413130320000000000000000000000000000000000000000000000000000" //RWA102
+    const ilk = "0x5257413130330000000000000000000000000000000000000000000000000000" //RWA102
 
     useEffect(() => {
 
-        // if (oracle) getIlkValues()
-        // if (oracle) getHealth()
-
-        // if (nft) getNftData()
-
-
-        // if (urn) getVatAddressHandler()
-        // if (urn && user) getCanHandler()
-        // if (urn && user) getVaultBalanceHandler()
-        // if (oracle) getIlkValues()
         if (auction) getAuctions()
 
     }, [auction])
 
     const sendBid = async (id) => {
 
-        if(bid<=auctionInfo[1].bid*1.05){
+        if (bid*wad <= auctionInfo[id-1].bid * 1.05) {
             alert("Bids must increase by at least 5%")
 
         }
-        else{
-        try{
-            await auction.methods.tend(id,wad.toString(),bid.toString()).send({
-                from: user
-            })
+        else {
+            try {
+                let tmp = web3.utils.toWei(bid.toString(), 'ether')
+                await auction.methods.tend(id, wad.toString(), tmp).send({
+                    from: user
+                })
 
-        }catch(err){
-            setError(err.message)
+                getAuctions()
+
+            } catch (err) {
+                setError(err.message)
+            }
         }
-    }
 
     }
 
     const dealAuction = async (id) => {
-        try{
+        try {
             await auction.methods.deal(id).send({
                 from: user
             })
 
-        }catch(err){
+        } catch (err) {
             setError(err.message)
         }
 
     }
 
-    // if (urn) {
-    //     urn.events.Lock({
-    //         filter: {}, // Using an array means OR: e.g. 20 or 23
-    //         fromBlock: 0
-    //     }, function (error, event) { console.log(event); })
-    //         .on('data', function (event) {
-    //             console.log(event); // same results as the optional callback above
-    //         })
-    //         .on('changed', function (event) {
-    //             // remove event from local database
-    //             setBal(event.returnValues[1])
-    //         })
-    //         .on('error', console.error);
-    //     urn.events.Free({
-    //         filter: {}, // Using an array means OR: e.g. 20 or 23
-    //         fromBlock: 0
-    //     }, function (error, event) { console.log(event); })
-    //         .on('data', function (event) {
-    //             console.log(event); // same results as the optional callback above
-    //         })
-    //         .on('changed', function (event) {
-    //             // remove event from local database
-    //             console.log(event.returnValues[1])
-    //             setBal(event.returnValues[1])
-    //         })
-    //         .on('error', console.error);
-    // }
 
     const getIlkValues = async () => {
 
-        // console.log(oracle)
-
-
+     
 
 
         const ilkVals = await vat.methods.ilks(ilk).call()
@@ -178,10 +132,6 @@ const RwaAuction = () => {
         }
 
         setAuctionInfo(tmp)
-
-
-
-        // getNftData()
 
     }
 
@@ -235,7 +185,7 @@ const RwaAuction = () => {
         // const 
         let tokenId = 9;
         const nftUri = await nft.methods.tokenURI(tokenId).call()
-        setNftUri(nftUri)
+        setNftUri("https://ipfs.io/ipfs/QmZjEtJfjwpouRN8gbCTJv7xiuVegCJr8gFK9oCVZNhN3B")
     }
 
 
@@ -250,9 +200,7 @@ const RwaAuction = () => {
         setBal(result[0] / wad)
     }
 
-    // "0x0000000000000000000000000000000000000000000000000000000000000001"
-    // "0x5257413939392d41000000000000000000000000000000000000000000000000"
-
+    
     //window.ethereum
     const connectWalletHandler = async () => {
         // alert("Connecting...")
@@ -273,22 +221,11 @@ const RwaAuction = () => {
 
                 console.log(oracle)
 
-                const auction = auctionContract(web3, "0xdf02C7ED36A79487875217Eb43Aa0fC8AbD0F263")
+                const auction = auctionContract(web3, "0x990cDC5463E117C606c9351FD1d84F93d5fE458E")
                 setAuction(auction)
 
                 const nft = nftContract(web3)
                 setNft(nft)
-
-                // getIlkValues()
-
-
-                // getCanHandler()
-                // await getVaultBalanceHandler()
-                // getVatAddressHandler()
-
-                const jug = jugContract(web3)
-
-                setJug(jug)
             } catch (err) {
                 setError(err.message)
             }
@@ -322,50 +259,12 @@ const RwaAuction = () => {
                     </div>
                 </div>
             </nav>
-            {/* <section>
-                <div className='container'>
-                    <p>Oracle Address: 0x166D6C931dbF8783D25D7a609916965F283c03d6</p>
-                </div>
-            </section> */}
-
 
             <section>
                 <div className='container has-text-danger'>
                     <p>{error}</p>
                 </div>
             </section>
-            {/* <section>
-                <div className='container'>
-                    <p>Current Value: {value}</p>
-                    <p>Adjusted Value: {adjustedValue}</p>
-                </div>
-            </section>
-            <section>
-                <div className='container'>
-                    <input type='text' onChange={(e) => setNewValue(e.target.value * wad)}></input>
-                    <button className='button is-secondary' onClick={changeValue}>Change Value</button>
-                </div>
-            </section>
-            <section>
-                <div className='container'>
-                    <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
-                </div>
-            </section> */}
-            {/* <section>
-                <div className='container'>
-                    <div className={health ? styles.healthy : styles.unhealthy}> */}
-            {/* <p>afsnjkdnfksnj</p> */}
-            {/* <p>is urn safe: {health ? "yes" : "no"}</p>
-
-                    </div> */}
-            {/* <p>is urn safe: {health}</p> */}
-            {/* </div>
-            </section>
-            <section>
-                <div className='container'>
-                    <button className='button is-secondary' onClick={getIlkValues}>get vals</button>
-                </div>
-            </section> */}
             <section>
                 <div className='container mb-6'>
                     <h2 className='bold'>Welcome to the Real World Asset Auction House!</h2>
@@ -376,11 +275,11 @@ const RwaAuction = () => {
             </section>
             <section>
                 <div className='container'>
-                    <h1>Auctions:</h1>
+                    <h1>Live Auctions:</h1>
                     <ul>
                         {auctionInfo.map((e, i) => (
                             <div key={e.tic} >
-                                {e.tic > 0 ?
+                                {e.end > 0 ?
                                     <div className='columns'>
                                         <div className='column box'>
 
@@ -388,7 +287,7 @@ const RwaAuction = () => {
                                                 <li><b>ID:</b> {i + 1}</li>
                                                 <li><b>Current bid expiry time:</b> {getDate(e.tic)}</li>
                                                 <li><b>Last bid amount:</b> {e.bid / wad} DAI</li>
-                                                <li><b>Goal debt coverage:</b> {e.tab} DAI</li>
+                                                <li><b>Goal debt coverage:</b> {e.tab/rad} DAI</li>
                                                 <li><b>Highest bidder:</b> {e.guy}</li>
                                                 <li><b>Auction Expiry:</b> {getDate(e.end)}</li>
                                                 <br></br>
@@ -398,12 +297,12 @@ const RwaAuction = () => {
                                         </div>
                                         <div className='column mt-6'>
                                             <div className='label'>Enter Bid Amount (DAI):</div>
-                                            <input type='text' onChange={(e) => setBid(e.target.value * wad)}></input>
-                                            <button className='button is-primary mb-4' onClick={() => sendBid(i + 1)}>Bid</button>
+                                            <input type='text' onChange={(e) => setBid(e.target.value)}></input>
+                                            <button className='button is-primary mb-4' onClick={() => sendBid(i+1)}>Bid</button>
                                             <br></br>
                                             <button className='button is-warning' onClick={() => dealAuction(i + 1)}>Deal Auction</button>
                                             <br></br>
-                                            <a href='https://ipfs.io/ipfs/QmddMpiPGUkDjFnqbY8ZVVrVG1DePq8H6LDbgQiWgcUmsb'>
+                                            <a href='https://ipfs.io/ipfs/QmZjEtJfjwpouRN8gbCTJv7xiuVegCJr8gFK9oCVZNhN3B'>
                                                 <button className='button is-secondary'>View Asset</button>
                                             </a>
                                         </div>

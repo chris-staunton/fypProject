@@ -9,7 +9,6 @@ import jugContract from '../blockchain/jug'
 import nftContract from '../blockchain/nft'
 import daiContract from '../blockchain/dai'
 import oracleContract from '../blockchain/oracle'
-// import { NextFetchEvent } from 'next/server'
 
 
 
@@ -43,41 +42,42 @@ const RwaVault = () => {
     const wad = Math.pow(10, 18) //18 decimals
     const ray = (Math.pow(10, 27)) //27 decimals
     const rad = Math.pow(10, 45) //45 decimals
-    const ilk = "0x5257413130320000000000000000000000000000000000000000000000000000" //RWA102
+    const ilk = "0x5257413130330000000000000000000000000000000000000000000000000000" //RWA103
 
     useEffect(() => {
 
         
         if (urn) getVatAddressHandler()
-        // if (urn && user) getCanHandler()
         if (urn && user) getVaultBalanceHandler()
-        if (urn && oracle && debt) getIlkValues()
+        if (urn && oracle) getIlkValues()
         if (urn && nft) getNftData()
 
     }, [urn, user, nft, oracle, debt])
 
     const getIlkValues = async () => {
 
-        // console.log(oracle)
-
-
-
 
         const ilkVals = await vat.methods.ilks(ilk).call()
         const orcIlk = await oracle.methods.ilks(ilk).call()
 
-        const spot = ilkVals[3] / rad
+        console.log(ilkVals)
 
-        // console.log(mat)
+        const spot = ilkVals[2] / ray
+
+        console.log(ilkVals[3])
+
+        
         setSpot(spot)
         let mat = orcIlk[6]
         setMat(mat)
+        console.log(mat)
         let x = spot * mat / 100
 
-        setVaultVal(x)
-        // setAdjustedVal(spot)
+        console.log(x)
 
-        setCr(Math.round(x/debt) + '%')
+        setVaultVal(x)
+
+        setCr((Math.round((x/debt)*100)) + '%')
 
         getHealth()
 
@@ -90,49 +90,23 @@ const RwaVault = () => {
         setHealth(health)
         console.log(health)
 
-        // getIlkValues()
-
 
     }
-
-    // if (urn) {
-    //     urn.events.Lock({
-    //         filter: {}, // Using an array means OR: e.g. 20 or 23
-    //         fromBlock: 0
-    //     }, function (error, event) { console.log(event); })
-    //         .on('data', function (event) {
-    //             console.log(event); // same results as the optional callback above
-    //         })
-    //         .on('changed', function (event) {
-    //             // remove event from local database
-    //             setBal(event.returnValues[1])
-    //         })
-    //         .on('error', console.error);
-    //     urn.events.Free({
-    //         filter: {}, // Using an array means OR: e.g. 20 or 23
-    //         fromBlock: 0
-    //     }, function (error, event) { console.log(event); })
-    //         .on('data', function (event) {
-    //             console.log(event); // same results as the optional callback above
-    //         })
-    //         .on('changed', function (event) {
-    //             // remove event from local database
-    //             console.log(event.returnValues[1])
-    //             setBal(event.returnValues[1])
-    //         })
-    //         .on('error', console.error);
-    // }
 
     const lockCollateral = async () => {
         console.log(tokenId)
         console.log(urnAddr)
         try {
-            nft.methods.approve(urnAddr, tokenId).send({
+            await nft.methods.approve(urnAddr, tokenId).send({
                 from: user
             })
             await urn.methods.lock().send({
                 from: user
             })
+
+            getVaultBalanceHandler()
+            getIlkValues()
+
         } catch (err) {
             setError(err.message)
         }
@@ -140,37 +114,51 @@ const RwaVault = () => {
 
     const freeCollateral = async () => {
         try {
-            urn.methods.free("1000000000000000000").send({
+            await urn.methods.free("1000000000000000000").send({
                 from: user
             })
+
+            getVaultBalanceHandler()
+            getIlkValues()
+
         } catch (err) {
             setError(err.message)
         }
     }
 
     const drawDai = async () => {
-        //note -> remove output conduit to reduce gas. Change output conduit address to operator address :)
         try {
             console.log("withdrawing: ", withdrawl)
+            let test = '19000000000000000000000000'
 
-            urn.methods.draw(withdrawl.toString()).send({
+
+
+            let tmp = web3.utils.toWei(withdrawl, 'ether')
+            console.log(tmp)
+
+            await urn.methods.draw(tmp).send({
                 from: user
             })
+
+            getVaultBalanceHandler()
+            getIlkValues()
 
         } catch (err) {
             setError(err.message)
         }
     }
 
-    // let healthy = false
-
     const repayDai = async () => {
         try {
             console.log("repaying: ", repayment)
 
-            urn.methods.wipe(repayment.toString()).send({
+            await urn.methods.wipe(repayment.toString()).send({
                 from: user
             })
+
+            getVaultBalanceHandler()
+            getIlkValues()
+
         } catch (err) {
             setError(err.message)
         }
@@ -178,16 +166,24 @@ const RwaVault = () => {
 
     const wipeAll = async () => {
         try {
-            console.log("wiping all debt")
+            console.log("wiping all debt: ",debt)
 
-            daiContract1.methods.transfer(urnAddr, (debt * wad).toString()).send({
+            let tmp = web3.utils.toWei((debt).toString(), 'ether')
+
+            console.log(tmp)
+
+            await daiContract1.methods.transfer(urnAddr, tmp).send({
                 from: user
 
             })
 
-            urn.methods.wipeAll().send({
+            await urn.methods.wipeAll().send({
                 from: user
             })
+
+            getVaultBalanceHandler()
+            getIlkValues()
+
         } catch (err) {
             setError(err.message)
         }
@@ -205,12 +201,6 @@ const RwaVault = () => {
 
 
     const updateDebt = async () => {
-        // const accounts = await web3.eth.getAccounts();
-
-
-        // getVaultBalanceHandler()
-
-
         try {
             const test = await jug.methods.drip(ilk).send({
                 from: user
@@ -256,11 +246,8 @@ const RwaVault = () => {
     const getNftData = async () => {
         // const 
         const nftUri = await nft.methods.tokenURI(tokenId).call()
-        setNftUri(nftUri)
+        setNftUri("https://ipfs.io/ipfs/QmZjEtJfjwpouRN8gbCTJv7xiuVegCJr8gFK9oCVZNhN3B")
     }
-
-    // "0x0000000000000000000000000000000000000000000000000000000000000001"
-    // "0x5257413939392d41000000000000000000000000000000000000000000000000"
 
     //window.ethereum
     const connectWalletHandler = async () => {
@@ -276,11 +263,6 @@ const RwaVault = () => {
 
                 const daiContract1 = daiContract(web3)
                 setDaiContract1(daiContract1)
-
-
-                // getCanHandler()
-                // await getVaultBalanceHandler()
-                // getVatAddressHandler()
                 const oracle = oracleContract(web3)
                 setOracle(oracle)
 
@@ -332,11 +314,11 @@ const RwaVault = () => {
             <div className='container'>
                         <div className='box columns mt-6 pb-1'>
                             <div className='box column'>
-                                <p>Stability fee: 2.00%</p>
+                                <p>Stability fee: {urn?'2.00':'0.00'}%</p>
 
                             </div>
                             <div className='box column'>
-                                <p>Liqudation Fee: 10.00%</p>
+                                <p>Liqudation Fee: {urn?'10.00':'0.00'}%</p>
 
                             </div>
                             <div className='box column'>
@@ -350,7 +332,7 @@ const RwaVault = () => {
                             </div>
                             <div className='box column mb-5'>
                                 <p>Available to Generate: </p>
-                                <p>{Math.floor(spot-debt)} DAI</p>
+                                <p>{bal==1&&healthy?Math.floor(spot-debt):'0'} DAI</p>
                             </div>
 
                         </div>
@@ -358,24 +340,17 @@ const RwaVault = () => {
                     </div>
             </section>
             <section className='container mt-4'>
-                {/* <div className='title'>
-                Vault Address: {urnAddr}
-                </div> */}
+                
             </section>
             <section className='columns mt-4'>
                 <div className='column is-2'></div>
                 <section className='mt-6 mb-6 column is-one-third'>
-                    {/* <div className={can ? 'box has-background-success' : 'box has-background-danger'}>
-                        <div className='mx-6 px-6 container'>
-                            <h1>Vault Operator</h1>
-                        </div>
-
-                    </div> */}
+                 
 
                     <div className={healthy ? 'container box has-background-success' : 'container box has-background-danger'}>
                         <div className='columns'>
                             <div className='column'>
-                                <p>total debt: {debt?'$':null}{debt}</p>
+                                <p>Total debt: {debt} DAI</p>
                             </div>
                             <div className='column'>
                                 <p>Token Locked: {bal}</p>
@@ -383,16 +358,12 @@ const RwaVault = () => {
                         </div>
                         <div className='columns'>
                             <div className='column'>
-                                <p>Collateral Ratio: {cr}</p>
+                                <p>Collateral Ratio: {debt?cr:vaultVal + '%'}</p>
                             </div>
                             <div className='column'>
                                 <p>collateral val: {vaultVal?'$':null}{vaultVal}</p>
                             </div>
                         </div>
-
-
-
-                        {/* <p>total dai drawn: {dai}</p> */}
                     </div>
                 </section>
                 <div className='column'>
@@ -401,34 +372,30 @@ const RwaVault = () => {
                         <div className='mt-4'>
                             <button disabled={urn ? null : 'disabled'} className='button is-secondary pt-6 pb-6 px-6' onClick={lockCollateral}>Lock Collateral</button>
                             <button disabled={urn ? null : 'disabled'} className='button is-secondary px-6 pb-6 pt-6' onClick={freeCollateral}>Free Collateral</button>
-                            {/* <button disabled={urn?null:'disabled'} className='button is-primary is-large'>Testing</button> */}
-
+                            
                         </div>
                     </div>
 
                 </div>
                 <div className='column'>
-                    {/* <div className='mt-6'>
-
-                        <button className='button is-secondary px-6 pt-6 pb-6' onClick={updateDebt}>Refresh Debt</button>
-                    </div> */}
+                   
                 </div>
 
             </section>
             <section className='columns'>
                 <div className='column is-2'></div>
                 <div className='container column'>
-                    <h1 className='mb-2'>Primary Functions</h1>
+                    <h1 className='mb-2'>Modify your DAI Balance:</h1>
                     <div className='box columns'>
 
                         <div className='column'>
                             <div className='label'>Withdraw DAI</div>
-                            <input type='text' onChange={(e) => setWithdrawl(e.target.value * wad)}></input>
+                            <input type='text' onChange={(e) => setWithdrawl(e.target.value)}></input>
                             <button className='button is-warning is-small' onClick={drawDai}>Draw DAI</button>
                         </div>
                         <div className='column'>
                             <div className='label'>Repay DAI</div>
-                            <input type='text' onChange={(e) => setRepayment(e.target.value * wad)}></input>
+                            <input type='text' onChange={(e) => setRepayment(e.target.value)}></input>
                             <button className='button is-warning is-small' onClick={repayDai}>Repay DAI</button>
 
                         </div>
@@ -442,16 +409,17 @@ const RwaVault = () => {
                     
                 </div>
             </section>
-            <section>
-                <div className='container mt-6'>
-                    <h1>{ilkStr} NFT data:</h1>
-                    <h2>Name: John's Wind Farm</h2>
-                    <h3>Location: Wexford, Ireland</h3>
-                    <h3>Legal Contact:<a href={nftUri}> {nftUri}</a>
+            <section>{bal==1?
+                <div className='container mt-6 mb-6'>
+                    <h1><b>Locked NFT data:</b></h1>
+                    <h2><b>MakerDAO internal name:</b> {ilkStr}</h2>
+                    <h2><b>Name:</b> John's Wind Farm</h2>
+                    <h3><b>Location:</b> Wexford, Ireland</h3>
+                    <h3><b>Legal Contract:</b><a href={nftUri}> {nftUri}</a>
                      </h3>
-                    <p>{nftUri}</p>
+                    
                 </div>
-            </section>
+            :null}</section>
             <section>
                 <div className='container has-text-danger'>
                     <p>{error}</p>

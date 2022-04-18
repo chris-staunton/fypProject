@@ -7,3 +7,8 @@
 .vault {
     background-color: rgba(0, 128, 0, 0.582);
 }
+
+.main img{
+    width: 500px;
+    height: 640px;
+}
